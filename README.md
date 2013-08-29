@@ -5,6 +5,7 @@ Care-free web app prototyping using files and scripts
 
 [![Gem Version](https://badge.fury.io/rb/oaf.png)](http://badge.fury.io/rb/oaf)
 [![Build Status](https://travis-ci.org/ryanuber/oaf.png)](https://travis-ci.org/ryanuber/oaf)
+[![Coverage Status](https://coveralls.io/repos/ryanuber/oaf/badge.png)](https://coveralls.io/r/ryanuber/oaf)
 
 `Oaf` provides stupid-easy way of creating dynamic web applications by setting
 all best practices and security considerations aside until you are sure that you
