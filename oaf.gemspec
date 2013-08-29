@@ -1,6 +1,6 @@
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'oaf'
+require 'oaf/version'
 
 Gem::Specification.new do |s|
   s.name          = 'oaf'
@@ -13,10 +13,12 @@ Gem::Specification.new do |s|
   s.homepage      = 'https://github.com/ryanuber/oaf'
   s.license       = 'MIT'
   s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  #s.test_files    = s.files.grep(%r{^spec/})
+  s.test_files    = s.files.grep(%r{^spec/})
   s.require_paths = ['lib']
 
-  #s.required_ruby_version = '>= 1.9'
+  s.required_ruby_version = '>= 1.9'
+
+  s.add_runtime_dependency 'bundler'
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'

@@ -20,6 +20,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'oaf/version'
-require 'oaf/util'
-require 'oaf/http'
+module Oaf
+  VERSION = '0.1.9'
+end
