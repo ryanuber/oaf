@@ -1,10 +1,7 @@
-if ENV['simplecov']
-  require 'simplecov'
-  SimpleCov.start do
-    add_filter 'spec'
-  end
+require 'simplecov'
+SimpleCov.start do
+  add_filter '/spec/'
 end
-require 'rubygems'
-require 'rspec'
-require 'rspec/mocks'
-require 'rspec/autorun'
+require 'oaf'
+require 'ostruct'
+require 'tempfile'
