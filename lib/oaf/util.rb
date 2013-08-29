@@ -120,17 +120,19 @@ module Oaf
       size = 0
       if text.to_s != ''
         parts = text.split /^---$/
-        meta = parts.last.split "\n"
-        for part in meta
-          if Oaf::Util.is_http_header? part
-            header, value = Oaf::Util.get_http_header part
-            headers.merge! header => value
-          elsif Oaf::Util.is_http_status? part
-            status = Oaf::Util.get_http_status part
-          else
-            next
+        if parts.length > 1
+          meta = parts.last.split "\n"
+          for part in meta
+            if Oaf::Util.is_http_header? part
+              header, value = Oaf::Util.get_http_header part
+              headers.merge! header => value
+            elsif Oaf::Util.is_http_status? part
+              status = Oaf::Util.get_http_status part
+            else
+              next
+            end
+            size += size == 0 ? 2 : 1  # compensate for delimiter
           end
-          size += size == 0 ? 2 : 1  # compensate for delimiter
         end
       end
       [headers, status, size]

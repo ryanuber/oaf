@@ -119,6 +119,12 @@ module Oaf
       status.should eq(200)
     end
 
+    it "should only consume metadata after the known delimiter" do
+      text = ['hello',  'x-powered-by: oaf', '', '', '200', 'test'].join "\n"
+      headers, status, size = Oaf::Util.parse_http_meta text
+      size.should eq(0)
+    end
+
     it "should assume meta size 0 if no metadata is present" do
       text = 'this response uses default metadata'
       headers, status, size = Oaf::Util.parse_http_meta text
