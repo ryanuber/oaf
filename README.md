@@ -83,6 +83,20 @@ ending with underscores (`_`). So for example, `test/_default_.GET` will match:
 If you want to define a top-level method for `/test`, you would do so in the
 file at `/test.GET`.
 
+### Requirements
+There aren't any really. Oaf currently uses WEBrick since it was the most built-
+in web server implementation in ruby.
+
+If you want to run the tests you can do so with:
+
+Ruby 1.8.x:
+- rspec
+- rcov
+
+Ruby 1.9.x:
+- rspec
+- simplecov
+
 Q&A
 ---
 **Why are the headers and status at the bottom of the response?**
