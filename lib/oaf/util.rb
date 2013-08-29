@@ -20,6 +20,8 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'open3'
+
 module Oaf
 
   module Util
@@ -83,8 +85,8 @@ module Oaf
         .concat((500..505).to_a).include? code.to_i
     end
 
-    # Format a hash of request headers in preparation for passing it to an
-    # executable program as an argument.
+    # Format a hash in preparation for passing it to an executable program as
+    # an argument on the command line.
     #
     # == Parameters:
     # headers::
@@ -94,9 +96,9 @@ module Oaf
     #   A comma-delimited, colon-separated list of header names and values. The
     #   return value of this function should be parsed according to RFC2616.
     #
-    def format_request_headers headers
+    def format_hash hash
       result = ''
-      headers.each do |name, value|
+      hash.each do |name, value|
         result += "#{name}:#{value},"
       end
       result.sub!(/,$/, '')
@@ -174,6 +176,22 @@ module Oaf
       File.exist?(file) ? file : nil
     end
 
+    # Run a command with stdout and stderr buffered. This suppresses error
+    # messages from the server process and enables us to return them in the
+    # HTTP response instead.
+    #
+    # == Parameters:
+    # command::
+    #   The command to execute against the server
+    #
+    # == Returns:
+    # A string of stderr concatenated to stdout.
+    #
+    def run_buffered command
+      stdin, stdout, stderr = Open3.popen3 command
+      stdout.read + stderr.read
+    end
+
     # Executes a file, or reads its contents if it is not executable, passing
     # it the request headers and body as arguments, and returns the result.
     #
@@ -192,7 +210,7 @@ module Oaf
       if file.nil?
         out = Oaf::Util.get_default_response
       elsif File.executable? file
-        out = %x(#{file} "#{headers}" "#{body}")
+        out = Oaf::Util.run_buffered "#{file} '#{headers}' '#{body}'"
       else
         out = File.open(file).read
       end

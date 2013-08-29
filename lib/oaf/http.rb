@@ -62,7 +62,7 @@ module Oaf
       server = WEBrick::HTTPServer.new :Port => port
       server.mount_proc '/' do |req, res|
         req_body = ''
-        req_headers = Oaf::Util.format_request_headers req.header
+        req_headers = Oaf::Util.format_hash req.header
         if ['POST', 'PUT'].member? req.request_method
           begin
             req_body = req.body
@@ -73,7 +73,7 @@ module Oaf
           req_body = req.query
         end
         file = Oaf::Util.get_request_file path, req.path, req.request_method
-        out = Oaf::Util.get_output file, req.header, req_body
+        out = Oaf::Util.get_output file, req_headers, req_body
         headers, status, body = Oaf::HTTP.parse_response out
         headers.each do |name, value|
           res.header[name] = value

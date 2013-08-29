@@ -83,19 +83,19 @@ module Oaf
   describe "Format Request Headers" do
     it "should return a single key/value for just one header" do
       headers = [['x-powered-by', 'oaf']]
-      result = Oaf::Util.format_request_headers headers
+      result = Oaf::Util.format_hash headers
       result.should eq('x-powered-by:oaf')
     end
 
     it "should return a comma-delimited list for multiple headers" do
       headers = [['x-powered-by', 'oaf'], ['content-type', 'text/plain']]
-      result = Oaf::Util.format_request_headers headers
+      result = Oaf::Util.format_hash headers
       result.should eq('x-powered-by:oaf,content-type:text/plain')
     end
 
     it "should return nil if no headers present" do
       headers = []
-      result = Oaf::Util.format_request_headers headers
+      result = Oaf::Util.format_hash headers
       result.should be_nil
     end
   end
@@ -189,11 +189,17 @@ module Oaf
       @f2.chmod 0644
       @f2.write "This is a test\n"
       @f2.close
+
+      @f3 = Tempfile.new 'oaf'
+      @f3.chmod 0755
+      @f3.write "#!/bin/bash\necho 'This is a test' 1>&2\n"
+      @f3.close
     end
 
     after(:all) do
       @f1.delete
       @f2.delete
+      @f3.delete
     end
 
     it "should execute a file if it is executable" do
@@ -209,6 +215,11 @@ module Oaf
     it "should assume safe defaults if the file doesnt exist" do
       result = Oaf::Util.get_output nil, nil, nil
       result.should eq(Oaf::Util.get_default_response)
+    end
+
+    it "should catch stderr output instead of dumping it" do
+      result = Oaf::Util.get_output @f3.path, nil, nil
+      result.should eq("This is a test\n")
     end
   end
 end
