@@ -192,7 +192,7 @@ module Oaf
 
       @f3 = Tempfile.new 'oaf'
       @f3.chmod 0755
-      @f3.write "#!/bin/bash\necho 'This is a test' 1>&2\n"
+      @f3.write "#!/bin/bash\necho 'test1'\necho 'test2' 1>&2\n"
       @f3.close
     end
 
@@ -219,7 +219,7 @@ module Oaf
 
     it "should catch stderr output instead of dumping it" do
       result = Oaf::Util.get_output @f3.path, nil, nil
-      result.should eq("This is a test\n")
+      result.should eq("test1\ntest2\n")
     end
   end
 end

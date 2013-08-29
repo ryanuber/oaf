@@ -188,8 +188,8 @@ module Oaf
     # A string of stderr concatenated to stdout.
     #
     def run_buffered command
-      stdin, stdout, stderr = Open3.popen3 command
-      stdout.read + stderr.read
+      stdin, stdout, stderr = Open3.popen3 "#{command} 2>&1"
+      stdout.read
     end
 
     # Executes a file, or reads its contents if it is not executable, passing
