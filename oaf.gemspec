@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.8'
 
   s.add_runtime_dependency 'bundler'
-  s.add_runtime_dependency 'json'
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'
