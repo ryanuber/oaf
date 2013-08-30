@@ -55,8 +55,7 @@ Hello, world!
 ```
 
 ### HTTP Methods
-Files must carry the extension of the HTTP method used to invoke them. Some
-examples: `hello.GET`, `hello.POST`, `hello.PUT`, `hello.DELETE`
+Files must carry the extension of the HTTP method used to invoke them.
 
 ### Headers and Status
 You can indicate HTTP headers and status using stdout from your script.
@@ -71,12 +70,36 @@ content-type: text/plain
 EOF
 ```
 
-Separated by 3 dashes on a line of their own (`\n---\n`), the very last block
+Separated by 3 dashes on a line of their own (`---`), the very last block
 of output can contain headers and response status.
 
 ### Getting request headers and body
-The headers and body of the HTTP request will be passed to the script as
-arguments. The headers will be passed as $1, and the body as $2.
+Headers, query parameters, and request body are all passed to executables using
+the environment. To defeat overlap in variables, they are namespaced using a
+prefix. The prefixes for environment variables are as follows:
+
+* Headers: `oaf_header_`
+* Query parameters: `oaf_query_`
+* Request body: `oaf_request_body`
+
+Below is a quick example of a shell script which makes use of the request data:
+```bash
+#!/bin/bash
+if [ -n "$oaf_header_accept" ]; then
+    echo "You passed the Accept header: $oaf_header_accept"
+fi
+if [ -n "$oaf_query_myparam" ]; then
+    echo "You passed the 'myparam' value: $oaf_query_myparam"
+fi
+if [ -n "$oaf_request_body" ]; then
+    echo "You passed the request body: $oaf_request_body"
+fi
+```
+
+Headers query parameter names are converted to all-lowercase, and dashes are
+replaced with underscores. This is due to the way the environment works. For
+example, if you wanted to get at the `Content-Type` header, you could with the
+environment variable `$oaf_header_content_type`.
 
 ### Catch-all methods
 Catch-all's can be defined by naming a file inside of a directory, beginning and

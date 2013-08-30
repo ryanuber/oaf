@@ -126,7 +126,7 @@ module Oaf
     # A string with the prepared value
     #
     def prepare_key key
-      key.gsub('-', '_')
+      key.gsub('-', '_').downcase
     end
 
     # Flatten a hash or array into a string. This is useful for preparing some

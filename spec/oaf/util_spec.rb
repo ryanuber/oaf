@@ -86,6 +86,11 @@ module Oaf
       result.should eq('x_powered_by')
     end
 
+    it "should convert all letters to lowercase in key names" do
+      result = Oaf::Util.prepare_key 'X-Powered-By'
+      result.should eq('x_powered_by')
+    end
+
     it "should flatten a hash into a string" do
       result = Oaf::Util.flatten({'item1' => 'value1'})
       result.should eq('item1value1')
