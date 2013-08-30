@@ -61,8 +61,8 @@ module Oaf
       server = WEBrick::HTTPServer.new :Port => port
       server.mount_proc '/' do |req, res|
         req_body = ''
-        req_headers = Oaf::Util.arg_format req.header.to_hash
-        req_query = Oaf::Util.arg_format req.query
+        req_headers = req.header
+        req_query = req.query
         if ['POST', 'PUT'].member? req.request_method
           begin
             req_body = req.body
@@ -70,7 +70,6 @@ module Oaf
             true  # without this, coverage is not collected.
           end
         end
-        req_body = Oaf::Util.arg_format req_body, false
         file = Oaf::Util.get_request_file path, req.path, req.request_method
         out = Oaf::Util.get_output file, req_headers, req_body, req_query
         res_headers, res_status, res_body = Oaf::HTTP.parse_response out

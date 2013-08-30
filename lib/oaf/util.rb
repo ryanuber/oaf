@@ -86,54 +86,77 @@ module Oaf
         .concat((500..505).to_a).include? code.to_i
     end
 
-    # Format data in preparation for passing it to an executable program as
-    # an argument on the command line.
+    # Convert various pieces of data about the request into a single hash, which
+    # can then be passed on as environment data to a script.
     #
     # == Parameters:
-    # data::
-    #   Some data to prepare
-    # flatten::
-    #   A boolean flag determining whether or not to flatten the data
-    #   structure before returning it. Default is true.
+    # headers::
+    #   A hash of request headers
+    # query::
+    #   A hash of query parameters
+    # body::
+    #   A string containing the request body
     #
     # == Returns:
-    # A JSON-encoded string
+    # A flat hash containing namespaced environment parameters
     #
-    def arg_format data, flatten=true
-      data = Oaf::Util.arg_flatten data if flatten
-      if data.kind_of? Hash or data.kind_of? Array
-        result = data
-      else
-        result = [data]
+    def prepare_environment headers, query, body
+      result = Hash.new
+      headers.each do |name, value|
+        name = Oaf::Util.prepare_key name
+        result["oaf_header_#{name}"] = Oaf::Util.flatten value
       end
-      JSON.dump result
+      query.each do |name, value|
+        name = Oaf::Util.prepare_key name
+        result["oaf_query_#{name}"] = Oaf::Util.flatten value
+      end
+      result["oaf_request_body"] = Oaf::Util.flatten body
+      result
     end
 
-    # Flatten arguments in preparation for passing them around. This is mainly
-    # for ease of use so that we don't go indexing into hashes and arrays here
-    # and there for no reason.
+    # Replace characters that would not be suitable for an environment variable
+    # name. Currently this only replaces dashes with underscores. If the need
+    # arises, more can be added here later.
+    #
+    # == Parameters:
+    # key::
+    #   The key to sanitize
+    #
+    # == Returns:
+    # A string with the prepared value
+    #
+    def prepare_key key
+      key.gsub('-', '_')
+    end
+
+    # Flatten a hash or array into a string. This is useful for preparing some
+    # data for passing in via the environment, because multi-dimension data
+    # structures are not supported for that.
     #
     # == Parameters:
     # data::
     #   The data to flatten
     #
     # == Returns:
-    # A flattened data structure similar to the input.
+    # A flattened string. It will be empty if the object passed in was not
+    # flatten-able.
     #
-    def arg_flatten data
-      result = data
+    def flatten data
+      result = ''
       if data.kind_of? Hash
-        result = Hash.new
         data.each do |key, val|
-          val = val.join if val.kind_of? Array and val.length == 1
-          result[key] = val
+          val = Oaf::Util.flatten val if not val.kind_of? String
+          result += "#{key}#{val}"
         end
       elsif data.kind_of? Array
-        result = Array.new
         data.each do |item|
-          item = item.join if item.kind_of? Array and item.length == 1
-          result << item
+          item = Oaf::Util.flatten item if not item.kind_of? String
+          result += item
         end
+      elsif data.kind_of? String
+        result = data
+      else
+        result = ''
       end
       result
     end
@@ -221,8 +244,8 @@ module Oaf
     # == Returns:
     # A string of stderr concatenated to stdout.
     #
-    def run_buffered command
-      stdin, stdout, stderr = Open3.popen3 "#{command} 2>&1"
+    def run_buffered env, command
+      stdin, stdout, stderr = Open3.popen3 env, "#{command} 2>&1"
       stdout.read
     end
 
@@ -242,11 +265,12 @@ module Oaf
     # == Returns:
     # The result from the file, or a default result if the file is not found.
     #
-    def get_output file, headers=nil, body=nil, query=nil
+    def get_output file, headers=[], body=[], query=[]
       if file.nil?
         out = Oaf::Util.get_default_response
       elsif File.executable? file
-        out = Oaf::Util.run_buffered "#{file} '#{headers}' '#{query}' '#{body}'"
+        env = Oaf::Util.prepare_environment headers, query, body
+        out = Oaf::Util.run_buffered env, file
       else
         out = File.open(file).read
       end
