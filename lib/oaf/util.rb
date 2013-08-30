@@ -21,6 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'open3'
+require 'json'
 
 module Oaf
 
@@ -85,23 +86,56 @@ module Oaf
         .concat((500..505).to_a).include? code.to_i
     end
 
-    # Format a hash in preparation for passing it to an executable program as
+    # Format data in preparation for passing it to an executable program as
     # an argument on the command line.
     #
     # == Parameters:
-    # headers::
-    #   A hash in the form `name` => `value` containing pairs of headers.
+    # data::
+    #   Some data to prepare
+    # flatten::
+    #   A boolean flag determining whether or not to flatten the data
+    #   structure before returning it. Default is true.
     #
     # == Returns:
-    #   A comma-delimited, colon-separated list of header names and values. The
-    #   return value of this function should be parsed according to RFC2616.
+    # A JSON-encoded string
     #
-    def format_hash hash
-      result = ''
-      hash.each do |name, value|
-        result += "#{name}:#{value},"
+    def arg_format data, flatten=true
+      data = Oaf::Util.arg_flatten data if flatten
+      if data.kind_of? Hash or data.kind_of? Array
+        result = data
+      else
+        result = [data]
       end
-      result.sub!(/,$/, '')
+      JSON.dump result
+    end
+
+    # Flatten arguments in preparation for passing them around. This is mainly
+    # for ease of use so that we don't go indexing into hashes and arrays here
+    # and there for no reason.
+    #
+    # == Parameters:
+    # data::
+    #   The data to flatten
+    #
+    # == Returns:
+    # A flattened data structure similar to the input.
+    #
+    def arg_flatten data
+      result = data
+      if data.kind_of? Hash
+        result = Hash.new
+        data.each do |key, val|
+          val = val.join if val.kind_of? Array and val.length == 1
+          result[key] = val
+        end
+      elsif data.kind_of? Array
+        result = Array.new
+        data.each do |item|
+          item = item.join if item.kind_of? Array and item.length == 1
+          result << item
+        end
+      end
+      result
     end
 
     # Given an array of text lines, iterate over each of them and determine if
@@ -202,15 +236,17 @@ module Oaf
     #   The HTTP request headers to pass
     # body::
     #   The HTTP request body to pass
+    # query::
+    #   The HTTP query parameters to pass
     #
     # == Returns:
     # The result from the file, or a default result if the file is not found.
     #
-    def get_output file, headers, body
+    def get_output file, headers=nil, body=nil, query=nil
       if file.nil?
         out = Oaf::Util.get_default_response
       elsif File.executable? file
-        out = Oaf::Util.run_buffered "#{file} '#{headers}' '#{body}'"
+        out = Oaf::Util.run_buffered "#{file} '#{headers}' '#{query}' '#{body}'"
       else
         out = File.open(file).read
       end

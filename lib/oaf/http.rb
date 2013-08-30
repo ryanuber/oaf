@@ -54,7 +54,6 @@ module Oaf
     # == Parameters:
     # path::
     #   The path in which to search for files
-    #
     # port::
     #   The TCP port to listen on
     #
@@ -62,24 +61,24 @@ module Oaf
       server = WEBrick::HTTPServer.new :Port => port
       server.mount_proc '/' do |req, res|
         req_body = ''
-        req_headers = Oaf::Util.format_hash req.header
+        req_headers = Oaf::Util.arg_format req.header.to_hash
+        req_query = Oaf::Util.arg_format req.query
         if ['POST', 'PUT'].member? req.request_method
           begin
             req_body = req.body
           rescue WEBrick::HTTPStatus::LengthRequired
             true  # without this, coverage is not collected.
           end
-        else
-          req_body = req.query
         end
+        req_body = Oaf::Util.arg_format req_body, false
         file = Oaf::Util.get_request_file path, req.path, req.request_method
-        out = Oaf::Util.get_output file, req_headers, req_body
-        headers, status, body = Oaf::HTTP.parse_response out
-        headers.each do |name, value|
+        out = Oaf::Util.get_output file, req_headers, req_body, req_query
+        res_headers, res_status, res_body = Oaf::HTTP.parse_response out
+        res_headers.each do |name, value|
           res.header[name] = value
         end
-        res.status = status
-        res.body = body
+        res.status = res_status
+        res.body = res_body
       end
       trap 'INT' do server.shutdown end
       server.start

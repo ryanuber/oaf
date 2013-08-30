@@ -80,23 +80,53 @@ module Oaf
     end
   end
 
-  describe "Format Request Headers" do
+  describe "Argument Format" do
     it "should return a single key/value for just one header" do
-      headers = [['x-powered-by', 'oaf']]
-      result = Oaf::Util.format_hash headers
-      result.should eq('x-powered-by:oaf')
+      headers = {'x-powered-by' => 'oaf'}
+      result = Oaf::Util.arg_format headers
+      result.should eq('{"x-powered-by":"oaf"}')
     end
 
-    it "should return a comma-delimited list for multiple headers" do
-      headers = [['x-powered-by', 'oaf'], ['content-type', 'text/plain']]
-      result = Oaf::Util.format_hash headers
-      result.should eq('x-powered-by:oaf,content-type:text/plain')
+    it "should return multiple values for more than one header" do
+      headers = {'x-powered-by' => 'oaf', 'content-type' => 'text/plain'}
+      result = Oaf::Util.arg_format headers
+      result.should eq('{"x-powered-by":"oaf","content-type":"text/plain"}')
     end
 
-    it "should return nil if no headers present" do
-      headers = []
-      result = Oaf::Util.format_hash headers
-      result.should be_nil
+    it "should flatten hash values if they are single-value arrays" do
+      headers = {'x-powered-by' => ['oaf']}
+      result = Oaf::Util.arg_format headers
+      result.should eq('{"x-powered-by":"oaf"}')
+    end
+
+    it "should flatten array values if they are single-value arrays" do
+      headers = ['x-powered-by', ['oaf']]
+      result = Oaf::Util.arg_format headers
+      result.should eq('["x-powered-by","oaf"]')
+    end
+
+    it "should preserve multiple values in multi-value arrays" do
+      headers = {'x-powered-by' => ['oaf', 'oaf']}
+      result = Oaf::Util.arg_format headers
+      result.should eq('{"x-powered-by":["oaf","oaf"]}')
+    end
+
+    it "should not flatten values if requested" do
+      headers = {'x-powered-by' => ['oaf']}
+      result = Oaf::Util.arg_format headers, false
+      result.should eq('{"x-powered-by":["oaf"]}')
+    end
+
+    it "should return valid JSON if no headers present" do
+      headers = Hash.new
+      result = Oaf::Util.arg_format headers
+      result.should eq('{}')
+    end
+
+    it "should return valid JSON if a non-hash is passed in" do
+      headers = 0
+      result = Oaf::Util.arg_format headers
+      result.should eq("[0]")
     end
   end
 
@@ -194,32 +224,57 @@ module Oaf
       @f3.chmod 0755
       @f3.write "#!/bin/bash\necho 'test1'\necho 'test2' 1>&2\n"
       @f3.close
+
+      @f4 = Tempfile.new 'oaf'
+      @f4.chmod 0755
+      @f4.write "#!/bin/bash\necho \"$1\"\necho \"$2\"\necho \"$3\"\n"
+      @f4.close
+
+      @f5 = Tempfile.new 'oaf'
+      @f5.chmod 0755
+      @f5.write "#!/bin/bash\necho ${#\@}\n"
+      @f5.close
     end
 
     after(:all) do
       @f1.delete
       @f2.delete
       @f3.delete
+      @f4.delete
+      @f5.delete
     end
 
     it "should execute a file if it is executable" do
-      result = Oaf::Util.get_output @f1.path, nil, nil
+      result = Oaf::Util.get_output @f1.path
       result.should eq("This is a test\n")
     end
 
     it "should read file contents if it is not executable" do
-      result = Oaf::Util.get_output @f2.path, nil, nil
+      result = Oaf::Util.get_output @f2.path
       result.should eq("This is a test\n")
     end
 
     it "should assume safe defaults if the file doesnt exist" do
-      result = Oaf::Util.get_output nil, nil, nil
+      result = Oaf::Util.get_output nil
       result.should eq(Oaf::Util.get_default_response)
     end
 
     it "should catch stderr output instead of dumping it" do
-      result = Oaf::Util.get_output @f3.path, nil, nil
+      result = Oaf::Util.get_output @f3.path
       result.should eq("test1\ntest2\n")
+    end
+
+    it "should pass arguments for headers and request body/params" do
+      headers = Oaf::Util.arg_format({'x-powered-by' => 'oaf'})
+      body = Oaf::Util.arg_format({'mydata' => 'myvalue'})
+      query = Oaf::Util.arg_format({'myparam' => 'myvalue'})
+      result = Oaf::Util.get_output @f4.path, headers, body, query
+      result.should eq("#{headers}\n#{query}\n#{body}\n")
+    end
+
+    it "should still pass arguments without body, query or headers" do
+      result = Oaf::Util.get_output @f5.path
+      result.should eq("3\n")
     end
   end
 end
