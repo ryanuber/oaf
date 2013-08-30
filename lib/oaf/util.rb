@@ -101,13 +101,11 @@ module Oaf
     #
     def prepare_environment headers, query, body
       result = Hash.new
-      headers.each do |name, value|
-        name = Oaf::Util.prepare_key name
-        result["oaf_header_#{name}"] = Oaf::Util.flatten value
-      end
-      query.each do |name, value|
-        name = Oaf::Util.prepare_key name
-        result["oaf_query_#{name}"] = Oaf::Util.flatten value
+      {'header' => headers, 'query' => query}.each do |prefix, data|
+        data.each do |name, value|
+          name = Oaf::Util.prepare_key name
+          result["oaf_#{prefix}_#{name}"] = Oaf::Util.flatten value
+        end
       end
       result["oaf_request_body"] = Oaf::Util.flatten body
       result
@@ -245,7 +243,7 @@ module Oaf
     #
     def run_buffered env, command
       stdin, stdout, stderr = Open3.popen3 env, "#{command} 2>&1"
-      stdout.read
+      return stdout.read
     end
 
     # Executes a file, or reads its contents if it is not executable, passing
