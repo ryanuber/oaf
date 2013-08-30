@@ -73,7 +73,7 @@ EOF
 Separated by 3 dashes on a line of their own (`---`), the very last block
 of output can contain headers and response status.
 
-### Getting request headers and body
+### Getting request headers, query parameters, and body
 Headers, query parameters, and request body are all passed to executables using
 the environment. To defeat overlap in variables, they are namespaced using a
 prefix. The prefixes for environment variables are as follows:
