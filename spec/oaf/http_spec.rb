@@ -126,5 +126,17 @@ module Oaf
       handler.respond_to?(:nonexistent).should be_false
       handler.do_PUT(req, res)
     end
+
+    it "should call our custom methods for built-ins" do
+      req = Oaf::FakeReq.new :path => @f1request
+      res = Oaf::FakeRes.new
+      Oaf::HTTP::Handler.any_instance.stub(:process_request).and_return(true)
+      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      handler.should_receive(:process_request).with(req, res).exactly(4).times
+      handler.do_GET(req, res)
+      handler.do_POST(req, res)
+      handler.do_HEAD(req, res)
+      handler.do_OPTIONS(req, res)
+    end
   end
 end
