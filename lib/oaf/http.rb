@@ -60,27 +60,57 @@ module Oaf
     def serve path, port
       server = WEBrick::HTTPServer.new :Port => port
       server.mount_proc '/' do |req, res|
-        req_body = ''
         req_headers = req.header
         req_query = req.query
-        if ['POST', 'PUT'].member? req.request_method
-          begin
-            req_body = req.body
-          rescue WEBrick::HTTPStatus::LengthRequired
-            true  # without this, coverage is not collected.
-          end
-        end
+        req_body = Oaf::HTTP::get_request_body req
         file = Oaf::Util.get_request_file path, req.path, req.request_method
         out = Oaf::Util.get_output file, req_headers, req_body, req_query
         res_headers, res_status, res_body = Oaf::HTTP.parse_response out
-        res_headers.each do |name, value|
-          res.header[name] = value
-        end
-        res.status = res_status
-        res.body = res_body
+        Oaf::HTTP.set_response! res, res_headers, res_body, res_status
       end
       trap 'INT' do server.shutdown end
       server.start
+    end
+
+    # Safely retrieves the request body, and assumes an empty string if it
+    # cannot be retrieved. This helps get around a nasty exception in WEBrick.
+    #
+    # == Parameters:
+    # req::
+    #   A WEBrick::HTTPRequest object
+    #
+    # == Returns:
+    # A string containing the request body
+    #
+    def get_request_body req
+      if ['POST', 'PUT'].member? req.request_method
+        begin
+          result = req.body
+        rescue WEBrick::HTTPStatus::LengthRequired
+          result = ''  # needs to be in rescue for coverage
+        end
+      end
+      result
+    end
+
+    # Consume HTTP response details and set them into a response object.
+    #
+    # == Parameters:
+    # res::
+    #   A WEBrick::HTTPResponse object
+    # headers::
+    #   A hash containing HTTP response headers
+    # body::
+    #   A string containing the HTTP response body
+    # status::
+    #   An integer indicating the response status
+    #
+    def set_response! res, headers, body, status
+      headers.each do |name, value|
+        res.header[name] = value
+      end
+      res.body = body
+      res.status = status
     end
   end
 end

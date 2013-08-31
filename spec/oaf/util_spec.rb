@@ -36,7 +36,7 @@ module Oaf
 
     it "should parse a name and value from a header line" do
       result = Oaf::Util.get_http_header 'x-powered-by: oaf'
-      result.should eq(['x-powered-by', 'oaf'])
+      result.should eq('x-powered-by' => 'oaf')
     end
 
     it  "should detect an invalid header line during header parsing" do
@@ -82,17 +82,17 @@ module Oaf
 
   describe "Argument Sanitizers" do
     it "should replace dashes with underscores in key names" do
-      result = Oaf::Util.prepare_key 'x-powered-by'
-      result.should eq('x_powered_by')
+      result = Oaf::Util.prepare_key 'header', 'x-powered-by'
+      result.should eq('oaf_header_x_powered_by')
     end
 
     it "should convert all letters to lowercase in key names" do
-      result = Oaf::Util.prepare_key 'X-Powered-By'
-      result.should eq('x_powered_by')
+      result = Oaf::Util.prepare_key 'header', 'X-Powered-By'
+      result.should eq('oaf_header_x_powered_by')
     end
 
     it "should flatten a hash into a string" do
-      result = Oaf::Util.flatten({'item1' => 'value1'})
+      result = Oaf::Util.flatten('item1' => 'value1')
       result.should eq('item1value1')
     end
 

@@ -20,8 +20,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require 'open3'
-
 module Oaf
 
   module Util
@@ -55,7 +53,7 @@ module Oaf
     def get_http_header line
       return nil if not is_http_header? line
       parts = line.split(':')
-      [parts[0].strip, parts[1].strip]
+      {parts[0].strip => parts[1].strip}
     end
 
     # Retrieves the numeric value from a line of text as an HTTP status code.
@@ -103,27 +101,45 @@ module Oaf
       result = Hash.new
       {'header' => headers, 'query' => query}.each do |prefix, data|
         data.each do |name, value|
-          name = Oaf::Util.prepare_key name
-          result["oaf_#{prefix}_#{name}"] = Oaf::Util.flatten value
+          result.merge! Oaf::Util.environment_item prefix, name, value
         end
       end
-      result["oaf_request_body"] = Oaf::Util.flatten body
-      result
+      result.merge Oaf::Util.environment_item 'request', 'body', body
     end
 
-    # Replace characters that would not be suitable for an environment variable
-    # name. Currently this only replaces dashes with underscores. If the need
-    # arises, more can be added here later.
+    # Prepares a key for placement in the execution environment. This includes
+    # namespacing variables and converting characters to predictable and
+    # easy-to-use names.
     #
     # == Parameters:
+    # prefix::
+    #   A prefix for the key. This helps with separation.
     # key::
     #   The key to sanitize
     #
     # == Returns:
     # A string with the prepared value
     #
-    def prepare_key key
-      key.gsub('-', '_').downcase
+    def prepare_key prefix, key
+      "oaf_#{prefix}_#{key.gsub('-', '_').downcase}"
+    end
+
+    # Formats a single environment item into a hash, which can be merged into a
+    # collective environment mapping later on.
+    #
+    # == Parameters:
+    # prefix::
+    #   The prefix for the type of item being added.
+    # key::
+    #   The key name of the environment property
+    # value::
+    #   The value for the environment property
+    #
+    # == Returns:
+    # A hash with prepared values ready to merge into an environment hash
+    #
+    def environment_item prefix, key, value
+      {Oaf::Util.prepare_key(prefix, key) => Oaf::Util.flatten(value)}
     end
 
     # Flatten a hash or array into a string. This is useful for preparing some
@@ -174,21 +190,16 @@ module Oaf
       headers = {}
       status = 200
       size = 0
-      if text.to_s != ''
-        parts = text.split /^---$/
-        if parts.length > 1
-          meta = parts.last.split "\n"
-          for part in meta
-            if Oaf::Util.is_http_header? part
-              header, value = Oaf::Util.get_http_header part
-              headers.merge! header => value
-            elsif Oaf::Util.is_http_status? part
-              status = Oaf::Util.get_http_status part
-            else
-              next
-            end
-            size += size == 0 ? 2 : 1  # compensate for delimiter
+      parts = text.split /^---$/
+      if parts.length > 1
+        for part in parts.last.split "\n"
+          if Oaf::Util.is_http_header? part
+            headers.merge! Oaf::Util.get_http_header part
+          elsif Oaf::Util.is_http_status? part
+            status = Oaf::Util.get_http_status part
+          else next
           end
+          size += size == 0 ? 2 : 1  # compensate for delimiter
         end
       end
       [headers, status, size]
@@ -230,11 +241,14 @@ module Oaf
       File.exist?(file) ? file : nil
     end
 
-    # Run a command with stdout and stderr buffered. This suppresses error
-    # messages from the server process and enables us to return them in the
-    # HTTP response instead.
+    # Fork a new process, in which we can safely modify the running environment
+    # and run a command, sending data back to the parent process using an IO
+    # pipe. This can be done in a single line in ruby >= 1.9, but we will do it
+    # the hard way to maintain compatibility with older rubies.
     #
     # == Parameters:
+    # env::
+    #   The environment data to use in the subprocess.
     # command::
     #   The command to execute against the server
     #
@@ -242,8 +256,16 @@ module Oaf
     # A string of stderr concatenated to stdout.
     #
     def run_buffered env, command
-      stdin, stdout, stderr = Open3.popen3 env, "#{command} 2>&1"
-      return stdout.read
+      out, wout = IO.pipe
+      pid = fork do
+        out.close
+        ENV.replace env
+        wout.write %x(#{command} 2>&1)
+        at_exit { exit! }
+      end
+      wout.close
+      Process.wait pid
+      out.read
     end
 
     # Executes a file, or reads its contents if it is not executable, passing
