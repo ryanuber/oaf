@@ -9,7 +9,7 @@ module Oaf
     @body = @path = @request_method = @query = nil
     @header = Hash.new
 
-    def initialize opts={}
+    def initialize opts={}, *args
       @body = opts[:body] ? opts[:body] : nil
       @path, @query = opts[:path] ? opts[:path].split('?') : ['/']
       @request_method = opts[:method] ? opts[:method] : 'GET'
@@ -41,6 +41,15 @@ module Oaf
 
     def []=(field, value)
       @header[field] = value
+    end
+  end
+
+  class FakeServlet
+
+    def [](field)
+    end
+
+    def []=(field, value)
     end
   end
 end

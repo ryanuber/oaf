@@ -20,11 +20,13 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'oaf/util'
+require 'oaf/http/handler'
 require 'webrick'
 
-module Oaf
+module Oaf::HTTP
 
-  module HTTP
+  module Server
     extend Oaf
     extend self
 
@@ -100,15 +102,7 @@ module Oaf
     #
     def serve path, port
       server = WEBrick::HTTPServer.new :Port => port
-      server.mount_proc '/' do |req, res|
-        req_headers = req.header
-        req_query = req.query
-        req_body = Oaf::HTTP::get_request_body req
-        file = Oaf::Util.get_request_file path, req.path, req.request_method
-        out = Oaf::Util.get_output file, req_headers, req_body, req_query
-        res_headers, res_status, res_body = Oaf::HTTP.parse_response out
-        Oaf::HTTP.set_response! res, res_headers, res_body, res_status
-      end
+      server.mount '/', Oaf::HTTP::Handler, path
       trap 'INT' do server.shutdown end
       server.start
     end

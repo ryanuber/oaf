@@ -22,4 +22,5 @@
 
 require 'oaf/version'
 require 'oaf/util'
-require 'oaf/http'
+require 'oaf/http/handler'
+require 'oaf/http/server'
