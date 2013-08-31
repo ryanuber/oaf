@@ -48,30 +48,6 @@ module Oaf
       [headers, status, body]
     end
 
-    # Invokes the Webrick web server library to handle incoming requests, and
-    # routes them to the appropriate scripts if they exist on the filesystem.
-    #
-    # == Parameters:
-    # path::
-    #   The path in which to search for files
-    # port::
-    #   The TCP port to listen on
-    #
-    def serve path, port
-      server = WEBrick::HTTPServer.new :Port => port
-      server.mount_proc '/' do |req, res|
-        req_headers = req.header
-        req_query = req.query
-        req_body = Oaf::HTTP::get_request_body req
-        file = Oaf::Util.get_request_file path, req.path, req.request_method
-        out = Oaf::Util.get_output file, req_headers, req_body, req_query
-        res_headers, res_status, res_body = Oaf::HTTP.parse_response out
-        Oaf::HTTP.set_response! res, res_headers, res_body, res_status
-      end
-      trap 'INT' do server.shutdown end
-      server.start
-    end
-
     # Safely retrieves the request body, and assumes an empty string if it
     # cannot be retrieved. This helps get around a nasty exception in WEBrick.
     #
@@ -111,6 +87,30 @@ module Oaf
       end
       res.body = body
       res.status = status
+    end
+
+    # Invokes the Webrick web server library to handle incoming requests, and
+    # routes them to the appropriate scripts if they exist on the filesystem.
+    #
+    # == Parameters:
+    # path::
+    #   The path in which to search for files
+    # port::
+    #   The TCP port to listen on
+    #
+    def serve path, port
+      server = WEBrick::HTTPServer.new :Port => port
+      server.mount_proc '/' do |req, res|
+        req_headers = req.header
+        req_query = req.query
+        req_body = Oaf::HTTP::get_request_body req
+        file = Oaf::Util.get_request_file path, req.path, req.request_method
+        out = Oaf::Util.get_output file, req_headers, req_body, req_query
+        res_headers, res_status, res_body = Oaf::HTTP.parse_response out
+        Oaf::HTTP.set_response! res, res_headers, res_body, res_status
+      end
+      trap 'INT' do server.shutdown end
+      server.start
     end
   end
 end
