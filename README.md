@@ -56,6 +56,7 @@ Hello, world!
 
 ### HTTP Methods
 Files must carry the extension of the HTTP method used to invoke them.
+Oaf should support any HTTP method, including custom methods.
 
 ### Headers and Status
 You can indicate HTTP headers and status using stdout from your script.
