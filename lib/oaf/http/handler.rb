@@ -91,7 +91,7 @@ module Oaf::HTTP
     #   A list of arguments to pass along to the processing method
     #
     def method_missing method, *opt
-      method.to_s =~ /^do_[A-Z]+$/ ? self.process_request(*opt) : super
+      method.to_s =~ /^do_[A-Z]+$/ ? process_request(*opt) : super
     end
   end
 end

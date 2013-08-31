@@ -115,12 +115,16 @@ module Oaf
       res.header.should eq('x-powered-by' => 'oaf')
     end
 
-    #it "should respond to any HTTP method" do
-    #  req = Oaf::FakeReq.new :path => @f1request
-    #  res = Oaf::FakeRes.new
-    #  handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
-    #  handler.should_receive(:do_GET).and_return(true)
-    #  handler.do_GET req, res
-    #end
+    it "should respond to any HTTP method" do
+      req = Oaf::FakeReq.new :path => @f1request
+      res = Oaf::FakeRes.new
+      Oaf::HTTP::Handler.any_instance.stub(:process_request).and_return(true)
+      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      handler.should_receive(:process_request).with(req, res).once
+      handler.respond_to?(:do_GET).should be_true
+      handler.respond_to?(:do_get).should be_false
+      handler.respond_to?(:nonexistent).should be_false
+      handler.do_PUT(req, res)
+    end
   end
 end
