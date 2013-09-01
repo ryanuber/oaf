@@ -22,12 +22,14 @@ Example
 -------
 
 Create an executable file named `hello.GET`:
+
 ```
 #!/bin/bash
 echo "Hello, ${USER}!"
 ```
 
 Start the server by running the `oaf` command, then make a request:
+
 ```
 $ curl localhost:9000/hello
 Hello, ryanuber!
@@ -38,24 +40,29 @@ Installation
 
 Oaf is available on [rubygems](http://rubygems.org/gems/oaf), which means you
 can do:
+
 ```
 gem install oaf
 ```
 
 ### Accepted files
+
 `Oaf` will run *ANY* file with the executable bit set, be it shell, Python, Ruby,
 compiled binary, or whatever else you might have.
 
 `Oaf` can also use plain text files.
 
 ### How file permissions affect output
+
 * If the file in your request is executable, the output of its execution will
   be used as the return data.
 * If the file is *NOT* executable, then the contents of the file will be used
   as the return data.
 
 ### Nested methods
+
 You can create nested methods using simple directories. Example:
+
 ```
 $ ls ./examples/
 hello.GET
@@ -85,26 +92,24 @@ Separated by 3 dashes on a line of their own (`---`), the very last block
 of output can contain headers and response status.
 
 ### Getting request headers, query parameters, and body
+
 Headers, query parameters, and request body are all passed to executables using
 the environment. To defeat overlap in variables, they are namespaced using a
-prefix. The prefixes for environment variables are as follows:
+prefix. The environment variables are as follows:
 
-* Headers: `oaf_header_`
-* Query parameters: `oaf_query_`
+* Headers: `oaf_header_*`
+* Request parameters: `oaf_param_*`
 * Request body: `oaf_request_body`
+* Request path: `oaf_request_path`
 
 Below is a quick example of a shell script which makes use of the request data:
-```bash
+
+```
 #!/bin/bash
-if [ -n "$oaf_header_accept" ]; then
-    echo "You passed the Accept header: $oaf_header_accept"
-fi
-if [ -n "$oaf_query_myparam" ]; then
-    echo "You passed the 'myparam' value: $oaf_query_myparam"
-fi
-if [ -n "$oaf_request_body" ]; then
-    echo "You passed the request body: $oaf_request_body"
-fi
+echo "You passed the Accept header: $oaf_header_accept"
+echo "You passed the 'message' value: $oaf_param_message"
+echo "You passed the request body: $oaf_request_body"
+echo "This method is located at: $oaf_request_path"
 ```
 
 Headers query parameter names are converted to all-lowercase, and dashes are
@@ -113,6 +118,7 @@ example, if you wanted to get at the `Content-Type` header, you could with the
 environment variable `$oaf_header_content_type`.
 
 ### Catch-all methods
+
 Catch-all's can be defined by naming a file inside of a directory, beginning and
 ending with underscores (`_`). So for example, `test/_default_.GET` will match:
 `GET /test/anything`, `GET /test/blah`, etc.
@@ -122,6 +128,7 @@ file at `/test.GET`.
 
 Q&A
 ---
+
 **Why are the headers and status at the bottom of the response?**
 Because it is much easier to echo these last. Since Oaf reads response
 data directly from stdout/stderr, it is very easy for debug or error messages

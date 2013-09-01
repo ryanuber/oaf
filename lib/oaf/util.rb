@@ -87,24 +87,26 @@ module Oaf
     # can then be passed on as environment data to a script.
     #
     # == Parameters:
+    # req_path::
+    #   A string with the HTTP request path
     # headers::
     #   A hash of request headers
-    # query::
-    #   A hash of query parameters
+    # params::
+    #   A hash of request parameters
     # body::
     #   A string containing the request body
     #
     # == Returns:
     # A flat hash containing namespaced environment parameters
     #
-    def prepare_environment uri, headers, query, body
+    def prepare_environment req_path, headers, params, body
       result = Hash.new
-      {'header' => headers, 'query' => query}.each do |prefix, data|
+      {'header' => headers, 'param' => params}.each do |prefix, data|
         data.each do |name, value|
           result.merge! Oaf::Util.environment_item prefix, name, value
         end
       end
-      result.merge! Oaf::Util.environment_item 'request', 'uri', uri
+      result.merge! Oaf::Util.environment_item 'request', 'path', req_path
       result.merge Oaf::Util.environment_item 'request', 'body', body
     end
 
@@ -223,16 +225,16 @@ module Oaf
     # == Parameters:
     # root::
     #   The root path to search within.
-    # uri::
-    #   The URI of the request
+    # req_path::
+    #   The HTTP request path
     # method::
     #   The HTTP method of the request
     #
     # == Returns:
     # The path to a file to use, or `nil` if none is found.
     #
-    def get_request_file root, uri, method
-      file = File.join root, "#{uri}.#{method}"
+    def get_request_file root, req_path, method
+      file = File.join root, "#{req_path}.#{method}"
       if not File.exist? file
         Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
           file = f
@@ -273,23 +275,25 @@ module Oaf
     # it the request headers and body as arguments, and returns the result.
     #
     # == Parameters:
+    # req_path::
+    #   The HTTP request path
     # file::
     #   The path to the file to use for output
     # headers::
     #   The HTTP request headers to pass
     # body::
     #   The HTTP request body to pass
-    # query::
-    #   The HTTP query parameters to pass
+    # params::
+    #   The HTTP request parameters to pass
     #
     # == Returns:
     # The result from the file, or a default result if the file is not found.
     #
-    def get_output file, uri=nil, headers=[], body=[], query=[]
+    def get_output file, req_path=nil, headers=[], body=[], params=[]
       if file.nil?
         out = Oaf::Util.get_default_response
       elsif File.executable? file
-        env = Oaf::Util.prepare_environment uri, headers, query, body
+        env = Oaf::Util.prepare_environment req_path, headers, params, body
         out = Oaf::Util.run_buffered env, file
       else
         out = File.open(file).read

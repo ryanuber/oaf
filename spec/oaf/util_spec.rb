@@ -220,7 +220,8 @@ module Oaf
       @f4 = Tempfile.new 'oaf'
       @f4.chmod 0755
       @f4.write "#!/bin/bash\necho \"$oaf_header_x_powered_by\"\n" +
-                "echo \"$oaf_query_myparam\"\necho \"$oaf_request_body\"\n"
+                "echo \"$oaf_param_myparam\"\necho \"$oaf_request_body\"\n" +
+                "echo \"$oaf_request_path\""
       @f4.close
     end
 
@@ -253,10 +254,12 @@ module Oaf
 
     it "should register environment variables for headers, query, and body" do
       headers = {'x-powered-by' => 'oaf'}
-      query = {'myparam' => 'myval'}
+      params = {'myparam' => 'myval'}
       body = 'Test Body'
-      result = Oaf::Util.get_output @f4.path, headers, body, query
-      result.should eq("oaf\nmyval\nTest Body\n")
+      path = '/test/path'
+      result = Oaf::Util.get_output @f4.path, path, headers, body, params
+      result.should eq("#{headers['x-powered-by']}\n#{params['myparam']}\n" +
+                       "#{body}\n#{path}\n")
     end
   end
 end
