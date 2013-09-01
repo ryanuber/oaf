@@ -97,13 +97,14 @@ module Oaf
     # == Returns:
     # A flat hash containing namespaced environment parameters
     #
-    def prepare_environment headers, query, body
+    def prepare_environment uri, headers, query, body
       result = Hash.new
       {'header' => headers, 'query' => query}.each do |prefix, data|
         data.each do |name, value|
           result.merge! Oaf::Util.environment_item prefix, name, value
         end
       end
+      result.merge! Oaf::Util.environment_item 'request', 'uri', uri
       result.merge Oaf::Util.environment_item 'request', 'body', body
     end
 
@@ -284,11 +285,11 @@ module Oaf
     # == Returns:
     # The result from the file, or a default result if the file is not found.
     #
-    def get_output file, headers=[], body=[], query=[]
+    def get_output file, uri=nil, headers=[], body=[], query=[]
       if file.nil?
         out = Oaf::Util.get_default_response
       elsif File.executable? file
-        env = Oaf::Util.prepare_environment headers, query, body
+        env = Oaf::Util.prepare_environment uri, headers, query, body
         out = Oaf::Util.run_buffered env, file
       else
         out = File.open(file).read

@@ -66,7 +66,8 @@ module Oaf::HTTP
       req_query = req.query
       req_body = Oaf::HTTP::Server.get_request_body req
       file = Oaf::Util.get_request_file @path, req.path, req.request_method
-      out = Oaf::Util.get_output file, req_headers, req_body, req_query
+      out = Oaf::Util.get_output(file, req.request_uri.to_s, req_headers,
+                                 req_body, req_query)
       res_headers, res_status, res_body = Oaf::HTTP::Server.parse_response out
       Oaf::HTTP::Server.set_response! res, res_headers, res_body, res_status
     end
