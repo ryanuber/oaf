@@ -3,12 +3,12 @@ Oaf
 
 Care-free web app prototyping using files and scripts
 
-[Documentation](http://rubydoc.info/gems/oaf/frames)
-
 [![Gem Version](https://badge.fury.io/rb/oaf.png)](http://badge.fury.io/rb/oaf)
 [![Build Status](https://travis-ci.org/ryanuber/oaf.png)](https://travis-ci.org/ryanuber/oaf)
 [![Coverage Status](https://coveralls.io/repos/ryanuber/oaf/badge.png)](https://coveralls.io/r/ryanuber/oaf)
 [![Code Climate](https://codeclimate.com/github/ryanuber/oaf.png)](https://codeclimate.com/github/ryanuber/oaf)
+
+[Documentation](http://rubydoc.info/gems/oaf/frames)
 
 `Oaf` provides stupid-easy way of creating dynamic web applications by setting
 all best practices and security considerations aside until you are sure that you
@@ -36,7 +36,8 @@ Hello, ryanuber!
 Installation
 ------------
 
-Oaf is available on [rubygems.org](http://rubygems.org/gems/oaf)
+Oaf is available on [rubygems](http://rubygems.org/gems/oaf), which means you
+can do:
 ```
 gem install oaf
 ```
