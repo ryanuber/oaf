@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
   s.executables   = files.grep(/^bin/) { |f| File.basename f }
   s.test_files    = files.grep(/^spec/)
-  s.require_paths = 'lib'
+  s.require_paths = ['lib']
 
   s.required_ruby_version = '>= 1.8'
 
