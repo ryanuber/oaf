@@ -21,16 +21,16 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'oaf/util'
-require 'oaf/http/server'
+require 'oaf/httpserver'
 require 'webrick'
 
-module Oaf::HTTP
+module Oaf
 
   # Provides all required handlers to WEBrick for serving all basic HTTP
   # methods. WEBrick handles GET, POST, HEAD, and OPTIONS out of the box,
   # but to mock most RESTful applications we are going to want PUT and
   # DELETE undoubtedly.
-  class Handler < WEBrick::HTTPServlet::AbstractServlet
+  class HTTPHandler < WEBrick::HTTPServlet::AbstractServlet
 
     # Remove the predefined WEBrick methods. WEBrick comes with some defaults
     # for GET, POST, OPTIONS, and HEAD, but let's use our own instead.
@@ -64,12 +64,12 @@ module Oaf::HTTP
     def process_request req, res
       req_headers = req.header
       req_query = req.query
-      req_body = Oaf::HTTP::Server.get_request_body req
+      req_body = Oaf::HTTPServer.get_request_body req
       file = Oaf::Util.get_request_file @path, req.path, req.request_method
       out = Oaf::Util.get_output(file, req.path, req_headers, req_body,
                                  req_query)
-      res_headers, res_status, res_body = Oaf::HTTP::Server.parse_response out
-      Oaf::HTTP::Server.set_response! res, res_headers, res_body, res_status
+      res_headers, res_status, res_body = Oaf::HTTPServer.parse_response out
+      Oaf::HTTPServer.set_response! res, res_headers, res_body, res_status
     end
 
     # A magic respond_to? implementation to trick WEBrick into thinking that any

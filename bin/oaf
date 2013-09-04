@@ -61,4 +61,4 @@ else
   exit 1
 end
 
-Oaf::HTTP::Server.serve options[:path], options[:port]
+Oaf::HTTPServer.serve options[:path], options[:port]

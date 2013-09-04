@@ -25,7 +25,7 @@ require 'spec_helper'
 module Oaf
   describe "Returning HTTP Responses" do
     it "should return safe defaults if output is empty" do
-      headers, status, body = Oaf::HTTP::Server.parse_response ''
+      headers, status, body = Oaf::HTTPServer.parse_response ''
       headers.should eq({})
       status.should eq(200)
       body.should eq("\n")
@@ -33,7 +33,7 @@ module Oaf
 
     it "should return safe defaults when only body is present" do
       text = "This is a test\n"
-      headers, status, body = Oaf::HTTP::Server.parse_response text
+      headers, status, body = Oaf::HTTPServer.parse_response text
       headers.should eq({})
       status.should eq(200)
       body.should eq("This is a test\n")
@@ -41,25 +41,25 @@ module Oaf
 
     it "should return headers correctly" do
       text = "---\nx-powered-by: oaf"
-      headers, status, body = Oaf::HTTP::Server.parse_response text
+      headers, status, body = Oaf::HTTPServer.parse_response text
       headers.should eq({'x-powered-by' => 'oaf'})
     end
 
     it "should return status correctly" do
       text = "---\n201"
-      headers, status, body = Oaf::HTTP::Server.parse_response text
+      headers, status, body = Oaf::HTTPServer.parse_response text
       status.should eq(201)
     end
 
     it "should return body correctly" do
       text = "This is a test\n---\n200"
-      headers, status, body = Oaf::HTTP::Server.parse_response text
+      headers, status, body = Oaf::HTTPServer.parse_response text
       body.should eq("This is a test\n")
     end
 
     it "should return body correctly when no metadata is present" do
       text = "This is a test"
-      headers, status, body = Oaf::HTTP::Server.parse_response text
+      headers, status, body = Oaf::HTTPServer.parse_response text
       body.should eq("This is a test\n")
     end
   end
@@ -90,15 +90,15 @@ module Oaf
       @webrick.should_receive(:start).once.and_return(true)
       WEBrick::HTTPServer.stub(:new).and_return(@webrick)
       @webrick.should_receive(:mount) \
-        .with('/', Oaf::HTTP::Handler, '/tmp').once \
+        .with('/', Oaf::HTTPHandler, '/tmp').once \
         .and_return(true)
-      Oaf::HTTP::Server.serve '/tmp', 9000
+      Oaf::HTTPServer.serve '/tmp', 9000
     end
 
     it "should parse the request properly" do
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
       handler.process_request req, res
       res.body.should eq("This is a test.\n")
       res.status.should eq(201)
@@ -108,7 +108,7 @@ module Oaf
     it "should accept containable methods properly" do
       req = Oaf::FakeReq.new({:path => @f2request, :method => 'PUT'})
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
       handler.process_request req, res
       res.body.should eq("Containable Test\n")
       res.status.should eq(202)
@@ -118,8 +118,8 @@ module Oaf
     it "should respond to any HTTP method" do
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
-      Oaf::HTTP::Handler.any_instance.stub(:process_request).and_return(true)
-      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      Oaf::HTTPHandler.any_instance.stub(:process_request).and_return(true)
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
       handler.should_receive(:process_request).with(req, res).once
       handler.respond_to?(:do_GET).should be_true
       handler.respond_to?(:do_get).should be_false
@@ -130,8 +130,8 @@ module Oaf
     it "should call our custom methods for built-ins" do
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
-      Oaf::HTTP::Handler.any_instance.stub(:process_request).and_return(true)
-      handler = Oaf::HTTP::Handler.new Oaf::FakeServlet.new, @tempdir1
+      Oaf::HTTPHandler.any_instance.stub(:process_request).and_return(true)
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
       handler.should_receive(:process_request).with(req, res).exactly(4).times
       handler.do_GET(req, res)
       handler.do_POST(req, res)
