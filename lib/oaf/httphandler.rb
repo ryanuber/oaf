@@ -35,7 +35,7 @@ module Oaf
     # Remove the predefined WEBrick methods. WEBrick comes with some defaults
     # for GET, POST, OPTIONS, and HEAD, but let's use our own instead.
     instance_methods.each do |method|
-      undef_method method if method.to_s =~ /^do_[A-Z]+/
+      undef_method method if method.to_s =~ /^do_[A-Z]+$/
     end
 
     # Creates a new abstract server object and allows passing in the root
