@@ -1,12 +1,16 @@
 Source: oaf
 Maintainer: Ryan Uber <ru@ryanuber.com>
-Section: misc
+Section: devel
 Priority: optional
 Standards-Version: 3.9.3
 Build-Depends: debhelper (>= 9)
 
 Package: oaf
-Architecture: any
+Architecture: all
 Depends: ruby, ${shlibs:Depends}, ${misc:Depends}
 Description: Care-free webapp prototyping using files and scripts
- Care-free webapp prototyping using files and scripts
+ Oaf provides stupid-easy way of creating dynamic web applications by setting
+ all best practices and security considerations aside until you are sure that
+ you want to invest your time doing so. Oaf was created as a weekend project to
+ create a small, simple HTTP server program that uses script execution as its
+ primary mechanism for generating responses.
