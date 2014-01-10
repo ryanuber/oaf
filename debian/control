@@ -1,0 +1,12 @@
+Source: oaf
+Maintainer: Ryan Uber <ru@ryanuber.com>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.3
+Build-Depends: debhelper (>= 9)
+
+Package: oaf
+Architecture: any
+Depends: ruby, ${shlibs:Depends}, ${misc:Depends}
+Description: Care-free webapp prototyping using files and scripts
+ Care-free webapp prototyping using files and scripts
