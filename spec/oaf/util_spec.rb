@@ -234,23 +234,25 @@ module Oaf
 
     it "should execute a file if it is executable" do
       result = Oaf::Util.get_output @f1.path
-      result.should eq("This is a test\n")
+      result[0].should eq("This is a test\n")
     end
 
     it "should read file contents if it is not executable" do
       result = Oaf::Util.get_output @f2.path
-      result.should eq("This is a test\n")
+      result[0].should eq("This is a test\n")
     end
 
     it "should assume safe defaults if the file doesnt exist" do
       result = Oaf::Util.get_output nil
-      result.should eq(Oaf::Util.get_default_response)
+      result[0].should eq(Oaf::Util.get_default_response)
     end
 
     it "should catch stderr output instead of dumping it" do
       result = Oaf::Util.get_output @f3.path
-      result.should eq("test1\ntest2\n")
+      result[0].should eq("test1\ntest2\n")
     end
+
+      
 
     it "should register environment variables for headers, query, and body" do
       headers = {'x-powered-by' => 'oaf'}
@@ -258,7 +260,7 @@ module Oaf
       body = 'Test Body'
       path = '/test/path'
       result = Oaf::Util.get_output @f4.path, path, headers, body, params
-      result.should eq("#{headers['x-powered-by']}\n#{params['myparam']}\n" +
+      result[0].should eq("#{headers['x-powered-by']}\n#{params['myparam']}\n" +
                        "#{body}\n#{path}\n")
     end
   end

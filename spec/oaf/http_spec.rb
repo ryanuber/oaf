@@ -51,6 +51,22 @@ module Oaf
       status.should eq(201)
     end
 
+    it "should return a 500 on non-zero exit status" do
+      require 'webrick-mocks'
+      tempdir = Dir.mktmpdir
+      f = Tempfile.new ['oaf', '.GET'], tempdir
+      f.write "#!/bin/bash\nexit 1\necho '---'\necho 200\n"
+      f.close
+      File.chmod 0755, f.path
+      frequest = File.basename(f.path).sub!(/\.GET$/, '')
+
+      req = Oaf::FakeReq.new :path => frequest
+      res = Oaf::FakeRes.new
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, tempdir
+      handler.process_request req, res
+      res.status.should eq(500)
+    end
+
     it "should return body correctly" do
       text = "This is a test\n---\n200"
       headers, status, body = Oaf::HTTPServer.parse_response text

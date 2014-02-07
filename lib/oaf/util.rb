@@ -20,6 +20,8 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'yaml'
+
 module Oaf::Util
   extend self
 
@@ -253,19 +255,20 @@ module Oaf::Util
   #   The command to execute against the server
   #
   # == Returns:
-  # A string of stderr concatenated to stdout.
+  # A string of stderr concatenated to stdout and a boolean success/fail status.
   #
   def run_buffered env, command
     out, wout = IO.pipe
     pid = fork do
       out.close
       ENV.replace env
-      wout.write %x(#{command} 2>&1)
+      output = %x(#{command} 2>&1)
+      wout.write YAML.dump([output, $?.to_i == 0])
       at_exit { exit! }
     end
     wout.close
     Process.wait pid
-    out.read
+    YAML.load out.read
   end
 
   # Executes a file, or reads its contents if it is not executable, passing
@@ -287,14 +290,15 @@ module Oaf::Util
   # The result from the file, or a default result if the file is not found.
   #
   def get_output file, req_path=nil, headers=[], body=[], params=[]
+    retval = true
     if file.nil?
       out = Oaf::Util.get_default_response
     elsif File.executable? file
       env = Oaf::Util.prepare_environment req_path, headers, params, body
-      out = Oaf::Util.run_buffered env, file
+      out, retval = Oaf::Util.run_buffered env, file
     else
       out = File.open(file).read
     end
-    out
+    return out, retval
   end
 end

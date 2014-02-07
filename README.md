@@ -91,6 +91,10 @@ EOF
 Separated by 3 dashes on a line of their own (`---`), the very last block
 of output can contain headers and response status.
 
+**Note**
+If an executable script returns non-zero exit status, then the HTTP status code
+will be 500, no matter what was indicated in the reponse payload.
+
 ### Getting request headers, query parameters, and body
 
 Headers, query parameters, and request body are all passed to executables using
