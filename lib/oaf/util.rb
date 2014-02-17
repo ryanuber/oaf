@@ -225,6 +225,8 @@ module Oaf::Util
   # the hard way to maintain compatibility with older rubies.
   #
   # == Parameters:
+  # path::
+  #   The base path where the script file exists
   # env::
   #   The environment data to use in the subprocess.
   # command::
@@ -233,11 +235,17 @@ module Oaf::Util
   # == Returns:
   # A string of stderr concatenated to stdout.
   #
-  def run_buffered env, command
+  def run_buffered path, env, command
     out, wout = IO.pipe
     pid = fork do
       out.close
       ENV.replace env
+      begin
+        Dir.chdir path
+      rescue Errno::ENOENT => e
+        wout.write e.message
+        exit!
+      end
       wout.write %x(#{command} 2>&1)
       at_exit { exit! }
     end
@@ -250,6 +258,8 @@ module Oaf::Util
   # it the request headers and body as arguments, and returns the result.
   #
   # == Parameters:
+  # path::
+  #   The base path where the script file exists
   # req_path::
   #   The HTTP request path
   # file::
@@ -264,12 +274,12 @@ module Oaf::Util
   # == Returns:
   # The result from the file, or a default result if the file is not found.
   #
-  def get_output file, req_path=nil, headers=[], body=[], params=[]
+  def get_output path, file, req_path=nil, headers=[], body=[], params=[]
     if file.nil?
       out = Oaf::Util.get_default_response
     elsif File.executable? file
       env = Oaf::Util.prepare_environment req_path, headers, params, body
-      out = Oaf::Util.run_buffered env, file
+      out = Oaf::Util.run_buffered path, env, file
     else
       out = File.open(file).read
     end
