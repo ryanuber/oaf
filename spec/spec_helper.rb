@@ -11,3 +11,4 @@ end
 require 'oaf'
 require 'ostruct'
 require 'tempfile'
+require 'tmpdir'

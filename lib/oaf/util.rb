@@ -209,17 +209,20 @@ module Oaf::Util
   # The path to a file to use, or `nil` if none is found.
   #
   def get_request_file root, req_path, method
-    file_or_dir = File.join root, req_path
-    file = "#{file_or_dir}.#{method}"
-    if File.directory? file_or_dir
-      Dir.glob(File.join(file_or_dir, "_*_.#{method}")).each do |f|
-        file = f
-        break
-      end
-    elsif not File.exist? file
-      Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
-        file = f
-        break
+    path = File.join root, req_path
+    file = "#{path}.#{method}"
+
+    if not File.exist? file
+      if File.directory? path
+        Dir.glob(File.join(path, "_*_.#{method}")).each do |f|
+          file = f
+          break
+        end
+      else
+        Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
+          file = f
+          break
+        end
       end
     end
     File.exist?(file) ? file : nil
@@ -246,12 +249,7 @@ module Oaf::Util
     pid = fork do
       out.close
       ENV.replace env
-      begin
-        Dir.chdir path
-      rescue Errno::ENOENT => e
-        wout.write e.message
-        exit!
-      end
+      Dir.chdir path
       wout.write %x(#{command} 2>&1)
       at_exit { exit! }
     end

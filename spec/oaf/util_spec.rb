@@ -201,6 +201,14 @@ module Oaf
                 "echo \"$oaf_param_myparam\"\necho \"$oaf_request_body\"\n" +
                 "echo \"$oaf_request_path\""
       @f4.close
+
+      @tempdir1 = Dir.mktmpdir
+      @tempdir2 = File.join @tempdir1, 'sub'
+      Dir.mkdir @tempdir2
+      @f5 = Tempfile.new 'oaf', @tempdir2
+      @f5.chmod 0755
+      @f5.write "#!/bin/bash\npwd"
+      @f5.close
     end
 
     after(:all) do
@@ -238,6 +246,13 @@ module Oaf
       result = Oaf::Util.get_output @f4.path, path, headers, body, params
       result.should eq("#{headers['x-powered-by']}\n#{params['myparam']}\n" +
                        "#{body}\n#{path}\n")
+    end
+
+    it "should chdir to the directory containing the script" do
+      result = Oaf::Util.get_output @f5.path
+      # If the temp dir is a symlink, we don't know about that here. Just
+      # compare the basename instead.
+      File.basename(result).should eq("#{File.basename(@tempdir2)}\n")
     end
   end
 end

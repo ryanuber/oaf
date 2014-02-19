@@ -55,12 +55,29 @@ module Oaf
       @f2.write "Containable Test\n---\n202\nx-powered-by: oaf"
       @f2.close
       @f2request = File.basename(@f2.path).sub!(/\.PUT$/, '')
+
+      @tempdir2 = Dir.mktmpdir
+      Dir.mkdir File.join(@tempdir2, 'sub')
+      @f3 = File.new File.join(@tempdir2, 'sub', '_default_.GET'), 'w'
+      @f3.write "Directory wins"
+      @f3.close
+      @f3request = 'sub'
+
+      @tempdir3 = Dir.mktmpdir
+      @f4 = File.new File.join(@tempdir3, 'sub.GET'), 'w'
+      @f4.write "File wins"
+      @f4.close
+      @f4request = 'sub'
+      Dir.mkdir File.join(@tempdir3, 'sub')
+      f5 = File.new File.join(@tempdir3, 'sub', '_default_.GET'), 'w'
+      f5.write "Directory wins"
+      f5.close
     end
 
     after(:all) do
-      @f1.delete
       @f2.delete
-      Dir.delete @tempdir1
+      FileUtils.rm_rf @tempdir1
+      FileUtils.rm_rf @tempdir2
     end
 
     it "should start an HTTP server" do
@@ -115,6 +132,22 @@ module Oaf
       handler.do_POST(req, res)
       handler.do_HEAD(req, res)
       handler.do_OPTIONS(req, res)
+    end
+
+    it "should use directory default if no higher-level script exists" do
+      req = Oaf::FakeReq.new :path => @f3request
+      res = Oaf::FakeRes.new
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir2
+      handler.process_request req, res
+      res.body.should eq("Directory wins\n")
+    end
+
+    it "should use a file if present with a similarly-named directory" do
+      req = Oaf::FakeReq.new :path => @f4request
+      res = Oaf::FakeRes.new
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir3
+      handler.process_request req, res
+      res.body.should eq("File wins\n")
     end
   end
 end
