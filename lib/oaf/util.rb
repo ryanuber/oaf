@@ -209,8 +209,14 @@ module Oaf::Util
   # The path to a file to use, or `nil` if none is found.
   #
   def get_request_file root, req_path, method
-    file = File.join root, "#{req_path}.#{method}"
-    if not File.exist? file
+    file_or_dir = File.join root, req_path
+    file = "#{file_or_dir}.#{method}"
+    if File.directory? file_or_dir
+      Dir.glob(File.join(file_or_dir, "_*_.#{method}")).each do |f|
+        file = f
+        break
+      end
+    elsif not File.exist? file
       Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
         file = f
         break
@@ -258,8 +264,6 @@ module Oaf::Util
   # it the request headers and body as arguments, and returns the result.
   #
   # == Parameters:
-  # path::
-  #   The base path where the script file exists
   # req_path::
   #   The HTTP request path
   # file::
@@ -274,12 +278,12 @@ module Oaf::Util
   # == Returns:
   # The result from the file, or a default result if the file is not found.
   #
-  def get_output path, file, req_path=nil, headers=[], body=[], params=[]
+  def get_output file, req_path=nil, headers=[], body=[], params=[]
     if file.nil?
       out = Oaf::Util.get_default_response
     elsif File.executable? file
       env = Oaf::Util.prepare_environment req_path, headers, params, body
-      out = Oaf::Util.run_buffered path, env, file
+      out = Oaf::Util.run_buffered File.dirname(file), env, file
     else
       out = File.open(file).read
     end
