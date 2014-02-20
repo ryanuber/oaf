@@ -254,5 +254,10 @@ module Oaf
       # compare the basename instead.
       File.basename(result).should eq("#{File.basename(@tempdir2)}\n")
     end
+
+    it "should error if the passed path does not exist" do
+      result = Oaf::Util.run_buffered '/nonexistent', {}, ''
+      result.should eq("No such file or directory - /nonexistent")
+    end
   end
 end

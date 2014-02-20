@@ -245,11 +245,15 @@ module Oaf::Util
   # A string of stderr concatenated to stdout.
   #
   def run_buffered path, env, command
+    begin
+      Dir.chdir path
+    rescue Errno::ENOENT => e
+      return e.message
+    end
     out, wout = IO.pipe
     pid = fork do
       out.close
       ENV.replace env
-      Dir.chdir path
       wout.write %x(#{command} 2>&1)
       at_exit { exit! }
     end
