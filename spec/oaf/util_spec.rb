@@ -256,8 +256,9 @@ module Oaf
     end
 
     it "should error if the passed path does not exist" do
-      result = Oaf::Util.run_buffered '/nonexistent', {}, ''
-      result.should eq("No such file or directory - /nonexistent")
+      # /nonexistent exists occasionally on Travis CI, so use a weird directory
+      result = Oaf::Util.run_buffered '/n0n3x1st3nt', {}, ''
+      result.should eq("No such file or directory - /n0n3x1st3nt")
     end
   end
 end
