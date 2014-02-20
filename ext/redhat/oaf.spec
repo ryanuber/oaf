@@ -2,7 +2,7 @@
 
 name: oaf
 summary: Care-free web app prototyping using files and scripts
-version: 0.3.1
+version: 0.4.0
 release: 1%{?dist}
 buildarch: noarch
 license: MIT
