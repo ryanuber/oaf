@@ -144,6 +144,7 @@ module Oaf
     before(:all) do
       @tempdir1 = Dir.mktmpdir
       @tempdir2 = Dir.mktmpdir
+      @tempdir3 = Dir.mktmpdir
 
       @f1 = Tempfile.new ['oaf', '.GET'], @tempdir1
       @f1.write "This is a test.\n"
@@ -160,6 +161,7 @@ module Oaf
       @f2.delete
       Dir.delete @tempdir1
       Dir.delete @tempdir2
+      Dir.delete @tempdir3
     end
 
     it "should find existing files correctly" do
@@ -168,12 +170,22 @@ module Oaf
     end
 
     it "should return the fall-through file if request file doesn't exist" do
-      result = Oaf::Util.get_request_file @tempdir1, 'nonexistent', 'GET'
+      result = Oaf::Util.get_request_file @tempdir1, 'na', 'GET'
       result.should eq(@f2.path)
     end
 
+    it "should return a custom default if configured" do
+      result = Oaf::Util.get_request_file @tempdir3, 'na', 'GET', @f1.path
+      result.should eq(@f1.path)
+    end
+
+    it "should still return the fall-through if default doesn't exist" do
+      result = Oaf::Util.get_request_file @tempdir3, 'na', 'GET', '/n0n3x1st3nt'
+      result.should eq(nil)
+    end
+
     it "should return nil if neither the requested or default file exist" do
-      result = Oaf::Util.get_request_file @tempdir2, 'nonexistent', 'GET'
+      result = Oaf::Util.get_request_file @tempdir2, 'na', 'GET'
       result.should be_nil
     end
   end
