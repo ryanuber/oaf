@@ -3,7 +3,10 @@
 require 'optparse'
 require 'oaf'
 
-options = {:port => 9000}
+options = {
+  :port => 9000,
+  :default_response => ''
+}
 
 begin
   OptionParser.new do |opts|
@@ -16,6 +19,11 @@ begin
         exit 1
       end
       options[:port] = v.to_s
+      ARGV.shift
+    end
+    opts.on('--default-response FILE', 'Path to default response file') do |v|
+      options[:default_response] = v.to_s
+      ARGV.shift
     end
     opts.on('--version', 'Show the version number') do
       puts Oaf::VERSION
@@ -40,4 +48,4 @@ else
   exit 1
 end
 
-Oaf::HTTPServer.serve options[:path], options[:port]
+Oaf::HTTPServer.serve options

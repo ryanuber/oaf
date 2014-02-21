@@ -22,12 +22,12 @@ module Oaf
     # == Parameters:
     # server::
     #   A WEBrick::HTTPServer object
-    # path::
-    #   A string containing the root path
+    # options::
+    #   A hash of Oaf configuration options
     #
-    def initialize server, path
+    def initialize server, options
       super server
-      @path = path
+      @options = options
     end
 
     # Main server method. Oaf does not really differentiate between different
@@ -43,9 +43,10 @@ module Oaf
       req_headers = req.header
       req_query = req.query
       req_body = Oaf::HTTPServer.get_request_body req
-      file = Oaf::Util.get_request_file @path, req.path, req.request_method
+      file = Oaf::Util.get_request_file(@options[:path], req.path,
+        req.request_method, @options[:default_response])
       out = Oaf::Util.get_output(file, req.path, req_headers, req_body,
-                                 req_query)
+        req_query)
       res_headers, res_status, res_body = Oaf::HTTPServer.parse_response out
       Oaf::HTTPServer.set_response! res, res_headers, res_body, res_status
     end

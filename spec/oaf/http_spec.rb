@@ -81,19 +81,20 @@ module Oaf
     end
 
     it "should start an HTTP server" do
+      options = {:path => '/tmp', :port => 9000}
       @webrick = double()
       @webrick.should_receive(:start).once.and_return(true)
       WEBrick::HTTPServer.stub(:new).and_return(@webrick)
       @webrick.should_receive(:mount) \
-        .with('/', Oaf::HTTPHandler, '/tmp').once \
+        .with('/', Oaf::HTTPHandler, options).once \
         .and_return(true)
-      Oaf::HTTPServer.serve '/tmp', 9000
+      Oaf::HTTPServer.serve options
     end
 
     it "should parse the request properly" do
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir1}
       handler.process_request req, res
       res.body.should eq("This is a test.\n")
       res.status.should eq(201)
@@ -103,7 +104,7 @@ module Oaf
     it "should accept containable methods properly" do
       req = Oaf::FakeReq.new({:path => @f2request, :method => 'PUT'})
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir1}
       handler.process_request req, res
       res.body.should eq("Containable Test\n")
       res.status.should eq(202)
@@ -114,7 +115,7 @@ module Oaf
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
       Oaf::HTTPHandler.any_instance.stub(:process_request).and_return(true)
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir1}
       handler.should_receive(:process_request).with(req, res).once
       handler.respond_to?(:do_GET).should be_true
       handler.respond_to?(:do_get).should be_false
@@ -126,7 +127,7 @@ module Oaf
       req = Oaf::FakeReq.new :path => @f1request
       res = Oaf::FakeRes.new
       Oaf::HTTPHandler.any_instance.stub(:process_request).and_return(true)
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir1
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir1}
       handler.should_receive(:process_request).with(req, res).exactly(4).times
       handler.do_GET(req, res)
       handler.do_POST(req, res)
@@ -137,7 +138,7 @@ module Oaf
     it "should use directory default if no higher-level script exists" do
       req = Oaf::FakeReq.new :path => @f3request
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir2
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir2}
       handler.process_request req, res
       res.body.should eq("Directory wins\n")
     end
@@ -145,7 +146,7 @@ module Oaf
     it "should use a file if present with a similarly-named directory" do
       req = Oaf::FakeReq.new :path => @f4request
       res = Oaf::FakeRes.new
-      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, @tempdir3
+      handler = Oaf::HTTPHandler.new Oaf::FakeServlet.new, {:path => @tempdir3}
       handler.process_request req, res
       res.body.should eq("File wins\n")
     end

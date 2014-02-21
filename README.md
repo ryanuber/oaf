@@ -45,6 +45,20 @@ can do:
 gem install oaf
 ```
 
+Basic Usage
+-----------
+
+```
+SYNOPSIS:
+  oaf [options] [path]
+
+OPTIONS:
+    -p, --port PORT                  Listening port. Default=9000
+        --default-response FILE      Path to default response file
+        --version                    Show the version number
+    -h, --help                       Show this message
+```
+
 ### Accepted files
 
 `Oaf` will run *ANY* file with the executable bit set, be it shell, Python, Ruby,
@@ -123,8 +137,31 @@ Catch-all's can be defined by naming a file inside of a directory, beginning and
 ending with underscores (`_`). So for example, `test/_default_.GET` will match:
 `GET /test/anything`, `GET /test/blah`, etc.
 
-If you want to define a top-level method for `/test`, you would do so in the
-file at `/test.GET`.
+### Request handling priority
+
+Direct file matches are always prioritized over catch-all methods. Take the
+following directory structure as an example with the request for `/hello`:
+
+```
+.
+├── hello
+│   └── _default_.GET
+└── hello.GET
+```
+
+In this case, the file `hello.GET` will be executed during a request to
+`/hello`. If `hello.GET` did not exist, then `hello/_default_.GET` would be
+executed instead. If neither existed, then the default response would be
+returned.
+
+### Default response file
+
+If no files match a given request, Oaf must fall back to a default response to
+let the end user know that nothing was found. This is typically a 404 error
+page. Oaf gives you flexibility here by providing a `--default-response` command
+line option. The value of this argument should be the path to a file, which can
+be a script or flat text file, just like any other Oaf script, and supports the
+same format and backmatter to specify HTTP response headers, status code, etc.
 
 Q&A
 ---

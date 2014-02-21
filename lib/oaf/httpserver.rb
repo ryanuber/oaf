@@ -70,14 +70,12 @@ module Oaf::HTTPServer
   # routes them to the appropriate scripts if they exist on the filesystem.
   #
   # == Parameters:
-  # path::
-  #   The path in which to search for files
-  # port::
-  #   The TCP port to listen on
+  # options::
+  #   A hash of Oaf configuration options
   #
-  def serve path, port
-    server = WEBrick::HTTPServer.new :Port => port
-    server.mount '/', Oaf::HTTPHandler, path
+  def serve options
+    server = WEBrick::HTTPServer.new :Port => options[:port]
+    server.mount '/', Oaf::HTTPHandler, options
     trap 'INT' do server.shutdown end
     server.start
   end

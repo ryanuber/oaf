@@ -204,11 +204,13 @@ module Oaf::Util
   #   The HTTP request path
   # method::
   #   The HTTP method of the request
+  # default::
+  #   An optional path to a default response file
   #
   # == Returns:
   # The path to a file to use, or `nil` if none is found.
   #
-  def get_request_file root, req_path, method
+  def get_request_file root, req_path, method, default=''
     path = File.join root, req_path
     file = "#{path}.#{method}"
 
@@ -225,7 +227,9 @@ module Oaf::Util
         end
       end
     end
-    File.exist?(file) ? file : nil
+    return file if File.exist? file
+    return default if File.exist? default
+    nil
   end
 
   # Fork a new process, in which we can safely modify the running environment
