@@ -214,22 +214,13 @@ module Oaf::Util
     path = File.join root, req_path
     file = "#{path}.#{method}"
 
-    if not File.exist? file
-      if File.directory? path
-        Dir.glob(File.join(path, "_*_.#{method}")).each do |f|
-          file = f
-          break
-        end
-      else
-        Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
-          file = f
-          break
-        end
-      end
+    return file if File.file? file
+
+    Dir.glob(File.join(path, "_*_.#{method}")) +
+    Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
+      return f
     end
-    return file if File.exist? file
-    return default if File.exist? default
-    nil
+    File.exist?(default) ? default : nil
   end
 
   # Fork a new process, in which we can safely modify the running environment
