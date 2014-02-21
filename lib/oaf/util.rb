@@ -216,11 +216,13 @@ module Oaf::Util
 
     return file if File.file? file
 
-    Dir.glob(File.join(path, "_*_.#{method}")) +
+    Dir.glob(File.join(path, "_*_.#{method}")).each do |f|
+      return f
+    end
     Dir.glob(File.join(File.dirname(file), "_*_.#{method}")).each do |f|
       return f
     end
-    File.exist?(default) ? default : nil
+    File.file?(default.to_s) ? default : nil
   end
 
   # Fork a new process, in which we can safely modify the running environment
